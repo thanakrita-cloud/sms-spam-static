@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>SMS Spam Checker</title>
+<style>
+:root { color-scheme: light; --ink:#1B2433; --bg:#F6F7F9; --blue:#2563EB; --orange:#EA580C; }
+* { box-sizing:border-box; }
+html, body { margin:0; background:var(--bg); color:var(--ink); font-family:'Leelawadee UI','Tahoma','Segoe UI',sans-serif; line-height:1.6; }
+.wrap { max-width:980px; margin:0 auto; padding:22px 16px 56px; }
+
+.hero { display:flex; gap:18px; align-items:center; margin-bottom:.9rem; padding:22px 26px; border-radius:20px;
+        background:linear-gradient(135deg,#1E3A8A 0%,#2F6FDE 62%,#4F8DF5 100%); box-shadow:0 8px 22px rgba(30,58,138,.28); }
+.hero > div:last-child { min-width:0; }
+.hero-icon { width:62px; height:62px; border-radius:16px; background:#fff; display:flex; align-items:center; justify-content:center; font-size:32px; flex:none; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+.hero h1 { margin:0; font-size:2rem; line-height:1.2; color:#fff; }
+.hero p { margin:.35rem 0 0; color:#E3ECFF; }
+.badge { display:inline-block; font-size:.74rem; line-height:1.5; font-weight:700; padding:.12rem .75rem; border-radius:999px; background:rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.65); margin-left:.7rem; vertical-align:middle; }
+.steps { display:flex; gap:22px; flex-wrap:wrap; margin:.2rem 0 .6rem; }
+.step { display:flex; align-items:center; gap:9px; font-size:.95rem; font-weight:600; }
+.step b { width:28px; height:28px; border-radius:50%; background:#2563EB; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:.85rem; box-shadow:0 2px 6px rgba(37,99,235,.45); }
+.step:nth-child(2) b { background:#EA580C; } .step:nth-child(3) b { background:#7C3AED; }
+
+.tabs { display:flex; gap:6px; border-bottom:2px solid #E2E8F0; margin:.6rem 0 0; }
+.tab { background:none; border:none; font:inherit; font-weight:700; padding:.55rem .9rem; cursor:pointer; color:#475569; border-bottom:3px solid transparent; margin-bottom:-2px; }
+.tab.active { color:#DC2626; border-bottom-color:#DC2626; }
+.panel[hidden] { display:none; }
+
+.section-label { font-weight:800; font-size:1.02rem; margin:1.3rem 0 .5rem; padding-left:11px; border-left:5px solid #2563EB; line-height:1.2; }
+.groups { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.group-label { font-size:.85rem; font-weight:800; margin-bottom:.25rem; }
+.group-label.sp { color:#C2410C; } .group-label.hm { color:#1D4ED8; } .group-label.hd { color:#B45309; }
+.ex { display:block; width:100%; margin:0 0 8px; padding:.6rem .7rem; border-radius:12px; font:inherit; font-weight:700; cursor:pointer; }
+.ex.sp { background:#FFEDD5; border:2px solid #EA580C; color:#9A3412; } .ex.sp:hover { background:#C2410C; color:#fff; }
+.ex.hm { background:#DBEAFE; border:2px solid #2563EB; color:#1E3A8A; } .ex.hm:hover { background:#1D4ED8; color:#fff; }
+.ex.hd { background:#FEF3C7; border:2px dashed #D97706; color:#78350F; } .ex.hd:hover { background:#B45309; color:#fff; }
+
+textarea { width:100%; min-height:130px; padding:12px 14px; font:inherit; font-size:1.05rem; color:#1B2433; background:#fff; border:2px solid #93B4F0; border-radius:14px; resize:vertical; }
+textarea:focus { outline:none; border-color:#2563EB; box-shadow:0 0 0 4px rgba(37,99,235,.22); }
+.btns { display:grid; grid-template-columns:3fr 1fr; gap:10px; margin-top:10px; }
+.btn-main { background:linear-gradient(135deg,#2563EB,#4F46E5); color:#fff; border:none; border-radius:12px; font:inherit; font-weight:800; font-size:1.05rem; padding:.7rem 1rem; box-shadow:0 5px 14px rgba(37,99,235,.42); cursor:pointer; }
+.btn-main:hover { filter:brightness(1.1); }
+.btn-sec { background:#fff; border:2px solid #94A3B8; border-radius:12px; font:inherit; font-weight:700; cursor:pointer; color:#1B2433; }
+.hint { font-size:.85rem; color:#64748B; margin-top:6px; }
+
+.result { border-radius:20px; padding:24px 28px 18px; margin:6px 0 12px; color:#fff; }
+.result.spam { background:linear-gradient(135deg,#D4470A 0%,#B53A07 100%); box-shadow:0 10px 26px rgba(212,71,10,.38); }
+.result.ham  { background:linear-gradient(135deg,#2563EB 0%,#1E40AF 100%); box-shadow:0 10px 26px rgba(37,99,235,.38); }
+.result.unknown { background:linear-gradient(135deg,#64748B 0%,#475569 100%); box-shadow:0 10px 26px rgba(71,85,105,.30); }
+.result .big { font-size:2.1rem; font-weight:800; line-height:1.2; }
+.result .sub { margin-top:8px; font-size:1.02rem; }
+.result .sub b { font-weight:800; text-decoration:underline; text-underline-offset:3px; }
+.gauge { position:relative; height:18px; border-radius:999px; margin:36px 10px 8px; border:2px solid rgba(255,255,255,.85);
+         background:linear-gradient(90deg,#1D4ED8 0%,#60A5FA 28%,#E0ECFF 47%,#FFE8CC 53%,#FB923C 75%,#C2410C 100%); box-shadow:inset 0 1px 3px rgba(0,0,0,.25); }
+.gauge .zero { position:absolute; left:50%; top:-8px; width:3px; height:30px; background:#fff; border-radius:2px; box-shadow:0 0 0 1px rgba(0,0,0,.25); }
+.gauge .pin { position:absolute; top:-12px; transform:translateX(-50%); min-width:62px; height:34px; padding:0 12px; border-radius:17px; background:#fff; color:#1B2433; font-size:.95rem; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 8px rgba(0,0,0,.35); }
+.gauge-labels { display:flex; justify-content:space-between; font-size:.82rem; font-weight:600; opacity:.95; margin:0 8px 4px; }
+
+.alert { border-radius:12px; padding:.7rem 1rem; margin:.4rem 0; font-size:.95rem; }
+.alert.warn { background:#FEF3C7; border:1px solid #F59E0B; color:#78350F; }
+.alert.info { background:#DBEAFE; border:1px solid #93C5FD; color:#1E3A8A; }
+
+.chips { display:flex; gap:10px; flex-wrap:wrap; margin:.2rem 0 .3rem; }
+.chip { background:#fff; border:2px solid #CBD5E1; border-radius:14px; padding:8px 14px; font-size:.92rem; font-weight:600; }
+.chip b { padding:2px 10px; border-radius:999px; color:#fff; margin-left:4px; }
+.chip b.s { background:#C2410C; } .chip b.h { background:#1D4ED8; }
+.chip.ok { background:#DCFCE7; border-color:#4ADE80; color:#14532D; } .chip.warn { background:#FEF3C7; border-color:#F59E0B; color:#78350F; }
+
+.msg { background:#fff; border:2px solid #CBD5E1; border-radius:14px; padding:14px 18px; line-height:2; word-break:break-word; font-size:1.03rem; }
+mark.sp { background:#FDBA74; color:#7C2D12; border-radius:6px; padding:2px 6px; font-weight:700; }
+mark.hm { background:#93C5FD; color:#1E3A8A; border-radius:6px; padding:2px 6px; font-weight:700; }
+.legend { font-size:.85rem; margin-top:8px; } .legend mark { margin-right:4px; }
+
+.bars { background:#fff; border:2px solid #E2E8F0; border-radius:14px; padding:12px 14px; margin-top:12px; }
+.brow { display:grid; grid-template-columns:minmax(80px,170px) 1fr 54px; align-items:center; gap:8px; margin:6px 0; font-size:.92rem; }
+.brow .term { text-align:right; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.track { position:relative; height:20px; }
+.track::before { content:''; position:absolute; left:50%; top:-3px; bottom:-3px; width:2px; background:#CBD5E1; }
+.bar { position:absolute; top:2px; height:16px; border-radius:4px; }
+.bar.s { background:#EA580C; left:50%; } .bar.h { background:#2563EB; right:50%; }
+.val { font-weight:700; font-size:.85rem; }
+.axis { display:flex; justify-content:space-between; font-size:.8rem; color:#64748B; margin:2px 0 0 calc(min(170px,25%) + 8px); margin-right:62px; }
+.note { font-size:.86rem; opacity:.85; margin-top:.5rem; }
+
+.metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.metric { background:#fff; border:2px solid #BFDBFE; border-radius:16px; padding:14px 18px; box-shadow:0 3px 10px rgba(37,99,235,.12); }
+.metric .k { font-size:.85rem; color:#475569; } .metric .v { font-size:1.9rem; font-weight:800; }
+ul.lim li { margin:.25rem 0; }
+
+@media (max-width:640px) {
+  .hero { padding:16px; gap:12px; } .hero h1 { font-size:1.45rem; } .badge { font-size:.72rem; margin-left:.4rem; }
+  .hero-icon { width:48px; height:48px; font-size:26px; }
+  .groups { grid-template-columns:1fr; } .metrics { grid-template-columns:1fr; }
+  .result .big { font-size:1.6rem; } .steps { gap:10px 16px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero"><div class="hero-icon">✉️</div><div>
+    <h1>SMS Spam Checker<span class="badge">English only</span></h1>
+    <p>วางข้อความ SMS ภาษาอังกฤษ แล้วดูว่าโมเดลมองว่าเป็น spam หรือข้อความปกติ พร้อมคำที่ทำให้โมเดลคิดแบบนั้น</p>
+  </div></div>
+  <div class="steps"><div class="step"><b>1</b>วางข้อความ หรือกดตัวอย่าง</div><div class="step"><b>2</b>กด "ตรวจข้อความ"</div><div class="step"><b>3</b>อ่านผลและคำที่มีผล</div></div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="check" role="tab">ตรวจข้อความ</button>
+    <button class="tab" data-tab="about" role="tab">เกี่ยวกับโมเดลและข้อจำกัด</button>
+  </div>
+
+  <section class="panel" id="p-check">
+    <div class="section-label">ลองตัวอย่างก่อนก็ได้</div>
+    <div class="groups" id="groups"></div>
+
+    <div class="section-label">หรือวางข้อความของคุณ</div>
+    <textarea id="sms" placeholder="เช่น: Congratulations! You have won a free prize. Call now to claim..."></textarea>
+    <div class="btns"><button class="btn-main" id="go">🔍 ตรวจข้อความ</button><button class="btn-sec" id="clear">ล้าง</button></div>
+    <div class="hint">กด Ctrl + Enter เพื่อตรวจได้เลย</div>
+
+    <div id="out"></div>
+  </section>
+
+  <section class="panel" id="p-about" hidden>
+    <div class="section-label">โมเดลนี้เก่งแค่ไหน (ชุดทดสอบ 742 ข้อความ, spam 93)</div>
+    <div class="metrics" id="metrics"></div>
+    <p class="hint" id="metrics-cap"></p>
+    <div class="section-label">ทำงานยังไง</div>
+    <ol>
+      <li>แปลงข้อความเป็นตัวเลขด้วย <b>TF-IDF</b> (นับคำเดี่ยวและคู่คำ)</li>
+      <li><b>Logistic Regression</b> ให้น้ำหนักแต่ละคำ แล้วรวมเป็น "คะแนน"</li>
+      <li>คะแนนมากกว่า 0 = spam, น้อยกว่า 0 = ham</li>
+    </ol>
+    <p>โมเดลนี้เทรนเองจากข้อมูลจริง ไม่ได้เรียก LLM การคำนวณทั้งหมดทำในเบราว์เซอร์ของคุณ ไม่มีการส่งข้อความไปที่ไหน</p>
+    <div class="section-label">ข้อจำกัดที่ควรรู้</div>
+    <ul class="lim">
+      <li>รองรับ<b>ภาษาอังกฤษเท่านั้น</b></li>
+      <li>ระบบแสดง <b>ประเมินไม่ได้</b> เมื่อเป็นภาษาอื่น ไม่พบคำที่รู้จัก หรือยาวเกิน 5,000 ตัวอักษร</li>
+      <li>ออกแบบสำหรับ <b>SMS สั้น</b> ข้อความยาวกว่า 1,000 ตัวอักษรจะมีคำเตือน</li>
+      <li>ข้อมูลเทรนเก่า (ราวปี 2000s) ไม่ได้แทน SMS สแปมปัจจุบัน</li>
+      <li>โมเดลไม่ได้ถูกทุกข้อความ และ<b>ไม่ได้พิสูจน์ว่าเป็นมิจฉาชีพ</b></li>
+      <li>"คำที่มีผล" คือน้ำหนักของโมเดล ไม่ใช่เหตุผลจริงของข้อความนั้น</li>
+      <li>คะแนนไม่ใช่ความน่าจะเป็น</li>
+    </ul>
+    <p class="hint">ข้อมูล: Almeida, Gómez Hidalgo &amp; Yamakami, UCI SMS Spam Collection (CC BY 4.0) · โปรเจกต์ CP020003</p>
+  </section>
+</div>
+
+<script src="model.js"></script>
+<script src="core.js"></script>
+<script>
+(function () {
+  'use strict';
+  var C = window.SpamCore, M = window.MODEL, SCALE = 12;
+  var EXAMPLES = [
+    ['sp', '🚨 ถูกรางวัล', 'URGENT! You have won a £1000 cash prize. Call 09061234567 now to claim your reward.'],
+    ['sp', '🚨 ชวนชิงรางวัล', 'Free entry in a weekly competition to win tickets! Text WIN to 80085 now. T&Cs apply.'],
+    ['hm', '💬 นัดกินข้าว', 'Hey, are we still meeting for lunch tomorrow? Let me know.'],
+    ['hm', '💬 ฝากซื้อของ', "I'll be home by 7. Can you pick up some milk on the way?"],
+    ['hd', '⚠️ ปกติ แต่โมเดลว่า spam', 'Waiting for your call.'],
+    ['hd', '⚠️ spam แต่โมเดลว่าปกติ', 'For sale - arsenal dartboard. Good condition but no doubles or trebles!']
+  ];
+  var GROUPS = [['sp', '🟠 Spam'], ['hm', '🔵 ข้อความปกติ'], ['hd', '🟡 ที่โมเดลทายพลาด (ดูข้อจำกัด)']];
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return s.replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var sms = $('sms'), out = $('out');
+
+  // ตัวอย่าง
+  $('groups').innerHTML = GROUPS.map(function (g) {
+    return '<div><div class="group-label ' + g[0] + '">' + g[1] + '</div>' +
+      EXAMPLES.map(function (e, i) { return e[0] === g[0] ? '<button class="ex ' + e[0] + '" data-i="' + i + '">' + esc(e[1]) + '</button>' : ''; }).join('') + '</div>';
+  }).join('');
+  $('groups').addEventListener('click', function (ev) {
+    var b = ev.target.closest('.ex'); if (!b) return;
+    sms.value = EXAMPLES[+b.dataset.i][2]; check();
+  });
+
+  // แท็บ
+  document.querySelectorAll('.tab').forEach(function (t) {
+    t.addEventListener('click', function () {
+      document.querySelectorAll('.tab').forEach(function (x) { x.classList.toggle('active', x === t); });
+      $('p-check').hidden = t.dataset.tab !== 'check'; $('p-about').hidden = t.dataset.tab !== 'about';
+    });
+  });
+
+  // แท็บ "เกี่ยวกับ"
+  var m = M.metrics.LogReg;
+  $('metrics').innerHTML = [['Precision', m.precision], ['Recall', m.recall], ['F1', m.f1]].map(function (x) {
+    return '<div class="metric"><div class="k">' + x[0] + '</div><div class="v">' + x[1].toFixed(3) + '</div></div>'; }).join('');
+  $('metrics-cap').textContent = 'ข้อความปกติที่ถูกจับผิดเป็น spam ' + m.FP + ' ข้อความ · spam ที่หลุดไป ' + m.FN + ' ข้อความ · เทียบกับการทาย ham ทุกข้อ: accuracy 87.5% แต่จับ spam ไม่ได้เลย';
+
+  function highlight(text, rows) {
+    var weight = {};
+    rows.forEach(function (r) { r[0].split(' ').forEach(function (tok) { if (Math.abs(r[1]) > Math.abs(weight[tok] || 0)) weight[tok] = r[1]; }); });
+    var shown = text.length <= 700 ? text : text.slice(0, 700) + ' …';
+    var o = [], last = 0, re = new RegExp(C.TOKEN.source, 'gu'), mm;
+    while ((mm = re.exec(shown)) !== null) {
+      o.push(esc(shown.slice(last, mm.index)));
+      var w = weight[mm[0].toLowerCase()], seg = esc(mm[0]);
+      o.push(w !== undefined ? '<mark class="' + (w > 0 ? 'sp' : 'hm') + '">' + seg + '</mark>' : seg);
+      last = mm.index + mm[0].length;
+    }
+    o.push(esc(shown.slice(last)));
+    return o.join('').replace(/\n/g, '<br>');
+  }
+
+  function gauge(score) {
+    var pct = (Math.max(-SCALE, Math.min(SCALE, score)) + SCALE) / (2 * SCALE) * 100, pin = Math.max(9, Math.min(91, pct));
+    return '<div class="gauge" role="img" aria-label="คะแนน ' + score.toFixed(2) + '"><div class="zero"></div><div class="pin" style="left:' + pin.toFixed(1) + '%">' + (score >= 0 ? '+' : '') + score.toFixed(2) + '</div></div>' +
+      '<div class="gauge-labels"><span>← ham</span><span>เส้นตัดสิน 0</span><span>spam →</span></div>';
+  }
+  var sgn = function (v) { return (v >= 0 ? '+' : '') + v.toFixed(2); };
+
+  function check() {
+    var text = sms.value, query = text.trim();
+    if (!query) { out.innerHTML = '<div class="alert warn">ยังไม่มีข้อความ ลองวางข้อความหรือกดตัวอย่างด้านบน</div>'; return; }
+    var issue = C.scopeIssue(query, null), e = null;
+    if (issue === null) { e = C.explainLR(M, query, 8); issue = C.scopeIssue(query, e.nKnown); }
+    var h = '<div class="section-label">ผลการตรวจ</div>';
+    if (issue !== null) {
+      out.innerHTML = h + '<div class="result unknown"><div class="big">⚪ ประเมินไม่ได้</div><div class="sub">' + esc(issue) + '</div></div>' +
+        '<div class="alert info">ลองใช้ SMS ภาษาอังกฤษแบบสั้นที่มีคำทั่วไป ระบบจะไม่แสดง HAM/SPAM เมื่อข้อมูลอยู่นอกขอบเขต</div>';
+      return;
+    }
+    if (query.length > C.MAX_CHARS) h += '<div class="alert warn">ข้อความยาวผิดปกติ (' + query.length.toLocaleString('en-US') + ' ตัวอักษร) ระบบออกแบบสำหรับ SMS สั้น ผลอาจไม่น่าเชื่อถือ</div>';
+    var isSpam = e.score > 0, nb = C.predictNB(M, query) > 0 ? 1 : 0, sv = C.predictSVM(M, query) > 0 ? 1 : 0;
+    var pos = e.rows.filter(function (r) { return r[1] > 0; }).slice(0, 3), neg = e.rows.filter(function (r) { return r[1] < 0; }).slice(0, 3);
+    var bold = function (a) { return a.map(function (r) { return '<b>' + esc(r[0]) + '</b>'; }).join(', '); };
+    if (isSpam) h += '<div class="result spam"><div class="big">🚨 น่าจะเป็น SPAM</div><div class="sub">' + (pos.length ? 'คำที่ดันไปทาง spam มากสุด: ' + bold(pos) : 'ไม่มีคำเด่นชัดเจน') + '</div>' + gauge(e.score) + '</div>';
+    else h += '<div class="result ham"><div class="big">✅ น่าจะเป็นข้อความปกติ (HAM)</div><div class="sub">' + (neg.length ? 'คำที่ดันไปทาง ham มากสุด: ' + bold(neg) : 'ไม่เจอคำที่บ่งชี้ว่าเป็น spam') + '</div>' + gauge(e.score) + '</div>';
+    if (Math.abs(e.score) < 1) h += '<div class="alert warn">คะแนนใกล้ 0 โมเดลคาบเส้น ผลนี้เชื่อถือได้น้อย</div>';
+    var agree = (nb === sv && sv === (isSpam ? 1 : 0)), lab = function (v) { return v ? 'spam' : 'ham'; };
+    h += '<div class="chips"><div class="chip">Logistic Regression: <b class="' + (isSpam ? 's' : 'h') + '">' + lab(isSpam ? 1 : 0) + '</b></div>' +
+      '<div class="chip">Naive Bayes: <b class="' + (nb ? 's' : 'h') + '">' + lab(nb) + '</b></div>' +
+      '<div class="chip">Linear SVM: <b class="' + (sv ? 's' : 'h') + '">' + lab(sv) + '</b></div>' +
+      '<div class="chip ' + (agree ? 'ok' : 'warn') + '">' + (agree ? '✔ ทั้งสามโมเดลเห็นตรงกัน' : '⚠ โมเดลเห็นไม่ตรงกัน ควรระวัง') + '</div></div>';
+    h += '<div class="section-label">คำในข้อความที่โมเดลให้น้ำหนัก</div><div class="msg">' + highlight(query, e.rows) + '</div>' +
+      '<div class="legend"><mark class="sp">ส้ม</mark>ดันไปทาง spam &nbsp; <mark class="hm">ฟ้า</mark>ดันไปทาง ham</div>';
+    var lim = Math.max(1, Math.max.apply(null, e.rows.map(function (r) { return Math.abs(r[1]); })) * 1.15);
+    var sorted = e.rows.slice().sort(function (a, b) { return b[1] - a[1]; });
+    h += '<div class="bars">' + sorted.map(function (r) {
+      var w = Math.abs(r[1]) / lim * 50;
+      return '<div class="brow"><div class="term" title="' + esc(r[0]) + '">' + esc(r[0]) + '</div><div class="track"><div class="bar ' + (r[1] > 0 ? 's' : 'h') + '" style="width:' + w.toFixed(1) + '%"></div></div><div class="val">' + sgn(r[1]) + '</div></div>';
+    }).join('') + '<div class="note" style="text-align:center">← ham &nbsp;|&nbsp; spam →</div></div>';
+    h += '<div class="note">คะแนนรวม = ผลรวมของทุกคำ (' + sgn(e.score - e.intercept) + ') + ค่าเริ่มต้นของโมเดล (' + sgn(e.intercept) + ') = <b>' + sgn(e.score) + '</b> (คะแนนไม่ใช่ความน่าจะเป็น)</div>' +
+      '<div class="note">ผลนี้เป็นการประมาณของโมเดล ไม่ได้พิสูจน์ว่าข้อความเป็นมิจฉาชีพหรือไม่ และ "คำที่มีผล" คือน้ำหนักของโมเดล ไม่ใช่เหตุผลจริงของข้อความ</div>';
+    out.innerHTML = h;
+  }
+
+  $('go').addEventListener('click', check);
+  $('clear').addEventListener('click', function () { sms.value = ''; out.innerHTML = ''; sms.focus(); });
+  sms.addEventListener('keydown', function (ev) { if ((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter') { ev.preventDefault(); check(); } });
+})();
+</script>
+</body>
+</html>
